@@ -6,6 +6,7 @@ from transformers import BertTokenizer, BertForSequenceClassification
 from transformers import AdamW
 import torch.nn.functional as F
 from tqdm import tqdm
+import numpy as np
 
 # Load and prepare data
 def load_data(file_path):
@@ -14,14 +15,18 @@ def load_data(file_path):
 
 # Function to prepare data with proper tokenization
 def prepare_data(df, tokenizer, max_len):
-    X = df['date'].tolist()  # Dates as input strings
-    y = df['significance_factor'].tolist()  # Significance as labels
+    # Assume 'events' is a list of strings and 'significance_factor' is the corresponding score
+    events = df['event'].tolist()  # Each entry is a list of events for that date
+    significance = df['significance_factor'].tolist()  # Significance as labels
 
-    # Tokenize input text (dates) using BERT tokenizer
+    # Join events into a single string for tokenization
+    X = ["; ".join(event) for event in events]
+
+    # Tokenize input text (events) using BERT tokenizer
     encodings = tokenizer(X, truncation=True, padding=True, max_length=max_len, return_tensors="pt")
 
     # Convert significance labels to tensor
-    labels = torch.tensor(y, dtype=torch.float32)  # Ensure labels are float for regression
+    labels = torch.tensor(significance, dtype=torch.float32)  # Ensure labels are float for regression
 
     return encodings, labels
 
@@ -52,6 +57,8 @@ def train(model, dataloader, optimizer, device):
 def evaluate(model, dataloader, device):
     model.eval()
     total_loss = 0
+    all_outputs = []
+    all_labels = []
     with torch.no_grad():
         for batch in dataloader:
             input_ids, attention_mask, labels = [b.to(device) for b in batch]
@@ -59,7 +66,10 @@ def evaluate(model, dataloader, device):
             outputs = model(input_ids, attention_mask=attention_mask)
             loss = F.mse_loss(outputs.logits.squeeze(), labels)
             total_loss += loss.item()
-    return total_loss / len(dataloader)
+            all_outputs.append(outputs.logits.squeeze().cpu())
+            all_labels.append(labels.cpu())
+
+    return total_loss / len(dataloader), torch.cat(all_outputs), torch.cat(all_labels)
 
 # Save model function
 def save_model(model, file_path):
@@ -75,26 +85,13 @@ def main():
     file_path = 'PageViews/pageviews.json'  # Path to the cleaned data JSON file
     df = load_data(file_path)
 
-    max_len = 16  # Adjust based on your data
+    max_len = 128  # Adjust based on your data
     encodings, labels = prepare_data(df, tokenizer, max_len)
-
-    # Convert PyTorch tensors to NumPy arrays
-    input_ids_np = encodings['input_ids'].numpy()
-    attention_mask_np = encodings['attention_mask'].numpy()
-    labels_np = labels.numpy()
 
     # Split data into training and testing sets
     train_input_ids, test_input_ids, train_attention_mask, test_attention_mask, train_labels, test_labels = train_test_split(
-        input_ids_np, attention_mask_np, labels_np, test_size=0.2
+        encodings['input_ids'], encodings['attention_mask'], labels, test_size=0.2
     )
-
-    # Convert NumPy arrays back to PyTorch tensors
-    train_input_ids = torch.tensor(train_input_ids)
-    test_input_ids = torch.tensor(test_input_ids)
-    train_attention_mask = torch.tensor(train_attention_mask)
-    test_attention_mask = torch.tensor(test_attention_mask)
-    train_labels = torch.tensor(train_labels, dtype=torch.float32)
-    test_labels = torch.tensor(test_labels, dtype=torch.float32)
 
     # Create DataLoaders for training and testing
     train_dataloader = create_dataloader(train_input_ids, train_attention_mask, train_labels, batch_size=32)
@@ -113,11 +110,36 @@ def main():
     for epoch in range(num_epochs):
         print(f"Epoch {epoch + 1}/{num_epochs}")
         train(model, train_dataloader, optimizer, device)
-        eval_loss = evaluate(model, test_dataloader, device)
+        eval_loss, all_outputs, all_labels = evaluate(model, test_dataloader, device)
         print(f"Validation Loss: {eval_loss:.4f}")
 
     # Save the model after training
     save_model(model, "bert_significance_model.pth")
+
+    # Example for using the model to get the most significant event
+    # Example for using the model to get the most significant event
+    model.eval()
+    test_events = ["Event 1; Event 2; Event 3"]  # Replace with actual events for a given day
+
+    # Tokenize the events
+    test_encodings = tokenizer(test_events, truncation=True, padding=True, max_length=max_len, return_tensors="pt").to(device)
+
+    with torch.no_grad():
+        outputs = model(test_encodings['input_ids'], attention_mask=test_encodings['attention_mask'])
+
+        # Check the shape of outputs.logits to ensure it's the right dimension
+        predicted_significance = outputs.logits.squeeze().cpu().numpy()
+
+    # Ensure that predicted_significance is an array of scores
+    if predicted_significance.ndim == 0:
+        predicted_significance = np.array([predicted_significance])
+
+    # Assuming significance is a list of scores corresponding to each event
+    significance_mapping = {event: score for event, score in zip(test_events[0].split("; "), predicted_significance)}
+    most_significant_event = max(significance_mapping, key=significance_mapping.get)
+
+    print("Most Significant Event:", most_significant_event)
+
 
 if __name__ == "__main__":
     main()

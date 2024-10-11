@@ -30,7 +30,7 @@ def clean_events(data_list):
         day, month = date_str.split("-")
 
         # Print message that the date is being processed
-        print(f"{day}{month} is being processed...")
+        print(f"{day}-{month} is being processed...")
 
         for event in data.get("events", []):
             year = event.get("year")
@@ -64,7 +64,7 @@ def clean_events(data_list):
                 })
 
         # Print message that the date has been processed
-        print(f"{day}{month} done processing")
+        print(f"{day}-{month} done processing")
 
     return cleaned_data
 

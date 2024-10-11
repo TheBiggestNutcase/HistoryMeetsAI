@@ -65,10 +65,13 @@ def fetch_and_save_data(month, day, retries=3):
             # Handle other types of errors (e.g., connection issues)
             print(f"Error for {date}: {e}")
             return
+        
+        if attempt >= retries:
+            print(f"Skipped {date}")
 
 # Iterate through all months and days of the year
-for month in range(1, 2):  # Loop over months from 1 to 12
-    for day in range(1, 3):  # Loop over days from 1 to 31
+for month in range(1, 3):  # Loop over months from 1 to 12
+    for day in range(1, 32):  # Loop over days from 1 to 31
         try:
             # Fetch and save data for the given month and day
             fetch_and_save_data(month, day)
