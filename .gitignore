@@ -1,7 +1,5 @@
 /venv/
 /Data/
 /CleanedData/
-/ExtractedData/
-/PageViews/
 /IndiaData/
-bert_significance_model.pth
+.DS_Store
