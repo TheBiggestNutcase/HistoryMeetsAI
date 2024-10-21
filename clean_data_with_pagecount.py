@@ -35,7 +35,7 @@ def clean_events(data_list):
         day, month = date_str.split("-")
 
         # Print message that the date is being processed
-        # print(f"{day}-{month} is being processed...")
+        print(f"{day}-{month} is being processed...")
 
         for category in ["events", "births", "deaths", "selected", "holidays"]:
             for item in data.get(category, []):
@@ -149,7 +149,7 @@ def save_to_json(cleaned_data, output_filename):
 
 # Main function to execute the data cleaning pipeline
 def main():
-    data_dir = "Data"  # Directory with JSON files
+    data_dir = "IndiaData"  # Directory with JSON files
     json_output_file = "CleanedData/cleaned_data.json"
     # csv_output_file = "CleanedData/cleaned_data.csv"
     
