@@ -17,12 +17,13 @@ headers = {
 # 1. Load Data from JSON Files
 def load_data_from_json(data_dir):
     data_list = []
-    for filename in os.listdir(data_dir):
-        if filename.endswith(".json"):
-            filepath = os.path.join(data_dir, filename)
-            with open(filepath, 'r') as json_file:
-                data = json.load(json_file)
-                data_list.append((filename, data))  # Storing the filename with the data
+    # Get a sorted list of JSON files
+    json_files = sorted([f for f in os.listdir(data_dir) if f.endswith(".json")])
+    for filename in json_files:
+        filepath = os.path.join(data_dir, filename)
+        with open(filepath, 'r') as json_file:
+            data = json.load(json_file)
+            data_list.append((filename, data))  # Storing the filename with the data
     return data_list
 
 # 2. Extract and Clean Event Data, Including Pageview-based Significance Factor
@@ -34,38 +35,37 @@ def clean_events(data_list):
         day, month = date_str.split("-")
 
         # Print message that the date is being processed
-        print(f"{day}-{month} is being processed...")
+        # print(f"{day}-{month} is being processed...")
 
-        for event in data.get("events", []):
-            year = event.get("year")
-            text = event.get("text")  # The main event description
-            pages = event.get("pages", [])
-            
-            # Get the first related page if available
-            if pages:
-                title = pages[0].get("title", "Unknown")
-                description = pages[0].get("description", "No description available")
-                article_url = pages[0].get("content_urls", {}).get("desktop", {}).get("page", "No URL available")
+        for category in ["events", "births", "deaths"]:
+            for item in data.get(category, []):
+                year = item.get("year")
+                text = item.get("text")  # The main description
+                pages = item.get("pages", [])
                 
-                # Call the function to get the pageview count from Wikimedia Pageview API
-                significance_factor = get_pageviews(title)
-            else:
-                title = "Unknown"
-                description = "No description available"
-                article_url = "No URL available"
-                significance_factor = 0  # Default significance if no article is available
-            
-            # Only add the event if year and text are available
-            if year and text:
-                cleaned_data.append({
-                    "date": filename.replace(".json", ""),  # Use the filename as the date
-                    "year": year,
-                    "event": text,
-                    "title": title,
-                    "description": description,  # Include detailed event information
-                    "article_url": article_url,  # Include article URL
-                    "significance_factor": significance_factor  # Include significance factor based on pageviews
-                })
+                if pages:
+                    title = pages[0].get("title", "Unknown")
+                    description = pages[0].get("description", "No description available")
+                    article_url = pages[0].get("content_urls", {}).get("desktop", {}).get("page", "No URL available")
+                    significance_factor = get_pageviews(title)
+                else:
+                    title = "Unknown"
+                    description = "No description available"
+                    article_url = "No URL available"
+                    significance_factor = 0  # Default significance if no article is available
+                
+                # Only add the item if year and text are available
+                if year and text:
+                    cleaned_data.append({
+                        "date": date_str,
+                        "year": year,
+                        "event": text,
+                        "category": category,  # Add category to distinguish between events, births, and deaths
+                        "title": title,
+                        "description": description,
+                        "article_url": article_url,
+                        "significance_factor": significance_factor
+                    })
 
         # Print message that the date has been processed
         print(f"{day}-{month} done processing")
@@ -149,7 +149,7 @@ def save_to_json(cleaned_data, output_filename):
 
 # Main function to execute the data cleaning pipeline
 def main():
-    data_dir = "IndiaData"  # Directory with JSON files
+    data_dir = "Data"  # Directory with JSON files
     json_output_file = "CleanedData/cleaned_data.json"
     # csv_output_file = "CleanedData/cleaned_data.csv"
     
