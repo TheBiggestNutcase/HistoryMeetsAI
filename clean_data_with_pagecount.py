@@ -37,7 +37,7 @@ def clean_events(data_list):
         # Print message that the date is being processed
         # print(f"{day}-{month} is being processed...")
 
-        for category in ["events", "births", "deaths"]:
+        for category in ["events", "births", "deaths", "selected", "holidays"]:
             for item in data.get(category, []):
                 year = item.get("year")
                 text = item.get("text")  # The main description
