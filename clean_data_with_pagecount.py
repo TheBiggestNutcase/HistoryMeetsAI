@@ -13,19 +13,19 @@ headers = {
   'User-Agent': 'HistoryMeetsAI (blah2652@gmail.com)'
 }
 
-# 1. Load Data from JSON Files
+# Load Data from JSON Files
 def load_data_from_json(data_dir):
     data_list = []
-    # Get a sorted list of JSON files
+    # Sorted list of JSON files
     json_files = sorted([f for f in os.listdir(data_dir) if f.endswith(".json")])
     for filename in json_files:
         filepath = os.path.join(data_dir, filename)
         with open(filepath, 'r') as json_file:
             data = json.load(json_file)
-            data_list.append((filename, data))  # Storing the filename with the data
+            data_list.append((filename, data))
     return data_list
 
-# 2. Extract and Clean Event Data, Including Pageview-based Significance Factor
+# Extract and Clean Event Data, Including Pageview-based Significance Factor
 def clean_events(data_list):
     cleaned_data = []
     for filename, data in data_list:
@@ -33,13 +33,12 @@ def clean_events(data_list):
         date_str = filename.replace(".json", "")
         day, month = date_str.split("-")
 
-        # Print message that the date is being processed
         print(f"{day}-{month} is being processed...")
 
-        for category in ["events", "births", "deaths", "selected", "holidays"]:
+        for category in ["events", "births", "deaths", "holidays"]:
             for item in data.get(category, []):
                 year = item.get("year")
-                text = item.get("text")  # The main description
+                text = item.get("text")
                 pages = item.get("pages", [])
                 
                 if pages:
@@ -59,19 +58,18 @@ def clean_events(data_list):
                         "date": date_str,
                         "year": year,
                         "event": text,
-                        "category": category,  # Add category to distinguish between events, births, and deaths
+                        "category": category,
                         "title": title,
                         "description": description,
                         "article_url": article_url,
                         "significance_factor": significance_factor
                     })
 
-        # Print message that the date has been processed
         print(f"{day}-{month} done processing")
 
     return cleaned_data
 
-# 3. Function to Get Pageviews from Wikipedia's Pageview API
+# Function to Get Pageviews from Wikipedia's Pageview API
 def get_pageviews(article_title):
     """
     Uses the Wikimedia Pageview API to get the total views for an article in the last 30 days.
@@ -79,7 +77,7 @@ def get_pageviews(article_title):
     """
     base_url = "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/"
     
-    # Define parameters
+    # Parameters
     project = "en.wikipedia"
     access = "all-access"
     agent = "all-agents"
@@ -88,7 +86,7 @@ def get_pageviews(article_title):
     # URL encode the article title
     encoded_title = urllib.parse.quote(article_title)
     
-    # Set the date range (adjust as needed)
+    # Set the date range
     end_date = datetime.now().strftime('%Y%m%d')
     start_date = (datetime.now().replace(day=1) - timedelta(days=30)).strftime('%Y%m%d')
     
@@ -96,7 +94,7 @@ def get_pageviews(article_title):
     url = f"{base_url}{project}/{access}/{agent}/{encoded_title}/{granularity}/{start_date}/{end_date}"
     
     try:
-        # Make the API request
+        # API request
         response = requests.get(url, headers=headers)
         data = response.json()
         
@@ -110,7 +108,7 @@ def get_pageviews(article_title):
         print(f"Error fetching pageviews for {article_title}: {e}")
         return 0  # Return 0 if there's an error
 
-# 4. Remove Duplicates
+# Remove Duplicates
 def remove_duplicates(cleaned_data):
     seen_events = set()
     unique_data = []
@@ -121,48 +119,35 @@ def remove_duplicates(cleaned_data):
             unique_data.append(entry)
     return unique_data
 
-# 5. Standardize Text Formatting (title case)
+# Standardize Text Formatting (title case)
 def standardize_text(cleaned_data):
     for entry in cleaned_data:
         entry['event'] = entry['event'].title()
         entry['description'] = entry['description'].capitalize()
     return cleaned_data
 
-# 6. Filter Out Entries with Missing Data
+# Filter Out Entries with Missing Data
 def filter_missing_data(cleaned_data):
     return [entry for entry in cleaned_data if entry.get('year') and entry.get('event')]
 
-# 7. Save Cleaned Data as JSON
+# Save Cleaned Data as JSON
 def save_to_json(cleaned_data, output_filename):
     with open(output_filename, 'w') as output_file:
         json.dump(cleaned_data, output_file, indent=4)
 
-# Main function to execute the data cleaning pipeline
+# Main function
 def main():
     data_dir = "IndiaData"  # Directory with JSON files
     json_output_file = "CleanedData/cleaned_data.json"
     
-    
-    # Step 1: Load data from JSON files
     data_list = load_data_from_json(data_dir)
-    
-    # Step 2: Clean and extract relevant fields (events with detailed info)
     cleaned_data = clean_events(data_list)
-    
-    # Step 3: Remove duplicate entries
     cleaned_data = remove_duplicates(cleaned_data)
-    
-    # Step 4: Standardize text (e.g., title case for event descriptions)
     cleaned_data = standardize_text(cleaned_data)
-    
-    # Step 5: Filter out entries with missing data (year, event)
     cleaned_data = filter_missing_data(cleaned_data)
-    
-    # Step 6: Save the cleaned data to a new JSON file
     save_to_json(cleaned_data, json_output_file)
     
-    print("Data cleaning complete. Cleaned data with pageviews saved to JSON.")
+    print("Data cleaning complete. Cleaned data with pageviews and categories saved to JSON.")
 
-# Run the main function
 if __name__ == "__main__":
     main()
