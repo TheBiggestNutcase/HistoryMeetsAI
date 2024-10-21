@@ -1,6 +1,5 @@
 import json
 import os
-# import csv
 import requests
 import urllib.parse
 from datetime import datetime, timedelta
@@ -138,20 +137,11 @@ def save_to_json(cleaned_data, output_filename):
     with open(output_filename, 'w') as output_file:
         json.dump(cleaned_data, output_file, indent=4)
 
-# # 8. Save Cleaned Data to CSV
-# def save_to_csv(cleaned_data, output_filename):
-#     fieldnames = ['date', 'year', 'event', 'title', 'description', 'article_url', 'significance_factor']
-#     with open(output_filename, 'w', newline='') as csv_file:
-#         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-#         writer.writeheader()
-#         for row in cleaned_data:
-#             writer.writerow(row)
-
 # Main function to execute the data cleaning pipeline
 def main():
     data_dir = "IndiaData"  # Directory with JSON files
     json_output_file = "CleanedData/cleaned_data.json"
-    # csv_output_file = "CleanedData/cleaned_data.csv"
+    
     
     # Step 1: Load data from JSON files
     data_list = load_data_from_json(data_dir)
@@ -170,9 +160,6 @@ def main():
     
     # Step 6: Save the cleaned data to a new JSON file
     save_to_json(cleaned_data, json_output_file)
-    
-    # Step 7: Save the cleaned data to a CSV file for analysis
-    # save_to_csv(cleaned_data, csv_output_file)
     
     print("Data cleaning complete. Cleaned data with pageviews saved to JSON.")
 
