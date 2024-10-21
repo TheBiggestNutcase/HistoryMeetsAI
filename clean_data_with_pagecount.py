@@ -1,9 +1,13 @@
 import json
 import os
-import csv
+# import csv
 import requests
 import urllib.parse
 from datetime import datetime, timedelta
+
+output_dir = "CleanedData"
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 headers = {
   'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJiYTAwMDZmMzNjM2U1OWJjMWRhZWZmNmNmZDY1MTQwZSIsImp0aSI6ImIyZTlkZGNjYmM0OTUxNDA3OTQwOWViNjRlNmNkMzczMDdjYTY3NjZjNzQwNjU2MDZlNmQwZTA2ZmE4ZmY3YTJhNDRkMDA2YWEzZDFjZWI4IiwiaWF0IjoxNzI4NDcwODQ4LjEwMDg0MSwibmJmIjoxNzI4NDcwODQ4LjEwMDg0NCwiZXhwIjozMzI4NTM3OTY0OC4wOTc5NDYsInN1YiI6Ijc2Njc2ODU0IiwiaXNzIjoiaHR0cHM6Ly9tZXRhLndpa2ltZWRpYS5vcmciLCJyYXRlbGltaXQiOnsicmVxdWVzdHNfcGVyX3VuaXQiOjUwMDAsInVuaXQiOiJIT1VSIn0sInNjb3BlcyI6WyJiYXNpYyJdfQ.HytyfR4avX0sH4cea-sZjs-um9QqclKGxLSKSQnyCVurK85e-BvEbU0g0291tPEFv3xS11nqVwqfwMxC4KHmr348eYGOTm0TMBVrbroQL3B3jKWeIfVt33JAqb-jmgKfd-eGhqFfhCMCZ0Ustse-KuxUjn_IxT4pm787FIdndLLx7Dt7sBLboNl2YxDUWKwD6woeubPRYTE1lv47CjXoSuSlsEYCgOuzmKM_Vz1xSZYAvX6VOV4-r2Ew8bfCt7_MMxLgB-1aPlwW8VlNVTUH3mc1h4w5kcfvit0EWPq4LbL27JaNXumVsRqjZ1Zen2wO2HybNLAoTmX3Hnir3OkcrmlRp1C84SPBZQcBVFLwjptk7mS4UvKSxcDgNxsc222Fueu82liy6VUR2t9318std3A1acLZe2KGYwrJMvk3ghWibP9fkLhUkhdfsLDefvmVw2_GJAjc_wjfZGrnqRp8jrZWRPAln_m0jAdGXlKSw4cqNa2TJjWUN_dLggAeXUGQrs4cS14Xo5p8G303TQ-QhDk06nBql_ZDhAarNWNJogoWWKKkrRjmesBy5P-3fc-JBpNmSCzgHax8iB84c7Dk1Kx1-h3sFLD2CG5DuM4YvyCQJIaMnUOi1tYwCB-JGHQuOYojt_fEuw46JjN5lq5G9a4IFQ1MOwvfQ-_vftZ9Jo8',
@@ -134,20 +138,20 @@ def save_to_json(cleaned_data, output_filename):
     with open(output_filename, 'w') as output_file:
         json.dump(cleaned_data, output_file, indent=4)
 
-# 8. Save Cleaned Data to CSV
-def save_to_csv(cleaned_data, output_filename):
-    fieldnames = ['date', 'year', 'event', 'title', 'description', 'article_url', 'significance_factor']
-    with open(output_filename, 'w', newline='') as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in cleaned_data:
-            writer.writerow(row)
+# # 8. Save Cleaned Data to CSV
+# def save_to_csv(cleaned_data, output_filename):
+#     fieldnames = ['date', 'year', 'event', 'title', 'description', 'article_url', 'significance_factor']
+#     with open(output_filename, 'w', newline='') as csv_file:
+#         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+#         writer.writeheader()
+#         for row in cleaned_data:
+#             writer.writerow(row)
 
 # Main function to execute the data cleaning pipeline
 def main():
-    data_dir = "Data"  # Directory with JSON files
-    json_output_file = "PageViews/pageviews.json"
-    csv_output_file = "PageViews/pageviews.csv"
+    data_dir = "IndiaData"  # Directory with JSON files
+    json_output_file = "CleanedData/cleaned_data.json"
+    # csv_output_file = "CleanedData/cleaned_data.csv"
     
     # Step 1: Load data from JSON files
     data_list = load_data_from_json(data_dir)
@@ -168,9 +172,9 @@ def main():
     save_to_json(cleaned_data, json_output_file)
     
     # Step 7: Save the cleaned data to a CSV file for analysis
-    save_to_csv(cleaned_data, csv_output_file)
+    # save_to_csv(cleaned_data, csv_output_file)
     
-    print("Data cleaning complete. Cleaned data with pageviews saved to JSON and CSV.")
+    print("Data cleaning complete. Cleaned data with pageviews saved to JSON.")
 
 # Run the main function
 if __name__ == "__main__":

@@ -75,7 +75,7 @@ def predict_events(date, knn, label_encoder_X, label_encoder_y, significance_fac
     return ranked_events
 
 def main():
-    data_filename = "PageViews/pageviews.json"
+    data_filename = "CleanedData/cleaned_data.json"
     data = load_cleaned_data(data_filename)
     
     if not data:
@@ -88,7 +88,7 @@ def main():
     knn, X_test, y_test = train_model(X_encoded, y_encoded)
     
     while True:
-        input_date = input("Enter a date (mm-dd) or 'exit' to quit: ")
+        input_date = input("Enter a date (mm-dd) or 'quit' to quit: ")
         if input_date.lower() == 'quit':
             break
         predicted_events = predict_events(input_date, knn, label_encoder_X, label_encoder_y, significance_factors, data)
