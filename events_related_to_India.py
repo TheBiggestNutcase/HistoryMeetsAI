@@ -45,6 +45,6 @@ def process_folder(input_folder, output_folder):
             filter_india_data(input_path, output_path)
 
 # Usage
-input_folder = "Data"  # Replace with your input folder path
-output_folder = "IndiaData"  # Replace with your desired output folder path
+input_folder = "Data"  # Input folder path
+output_folder = "IndiaData"  # Output folder path
 process_folder(input_folder, output_folder)
